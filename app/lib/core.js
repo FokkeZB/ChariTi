@@ -124,9 +124,6 @@ var APP = {
 		// The initial screen to show
 		APP.handleNavigation(0);
 		
-		// Updates the app.json file from a remote source
-		APP.update();
-		
 		// Set up push notifications
 		if(OS_IOS) {
 			if(APP.Settings.notifications.enabled) {
@@ -204,11 +201,11 @@ var APP = {
 		try {
 			data = JSON.parse(content.text);
 		} catch(_error) {
-			APP.log("error", "Unable to parse downloaded JSON, reverting to packaged JSON");
+			APP.log("error", "Unable to parse downloaded JSON");
 			
-			contentFile	= Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory + "data/app.json");
-			content		= contentFile.read();
-			data		= JSON.parse(content.text);
+			alert("Unable to parse configuration file");
+			
+			return;
 		}
 		
 		APP.ID		= data.id;
@@ -264,27 +261,20 @@ var APP = {
 	/**
 	 * Updates the app.json from a remote source
 	 */
-	update: function() {
+	update: function(_params) {
 		APP.log("debug", "APP.update");
 		
-		if(APP.ConfigurationURL) {
+		if(_params.url) {
 			HTTP.request({
 				timeout: 10000,
 				type: "GET",
 				format: "DATA",
-				url: APP.ConfigurationURL,
+				url: _params.url,
 				success: function(_data) {
 					APP.log("debug", "APP.update @loaded");
 					
 					// Determine if this is the same version as we already have
 					var data = JSON.parse(_data);
-					
-					if(data.version == APP.VERSION) {
-						// We already have it
-						APP.log("info", "Application is up-to-date");
-						
-						return;
-					}
 					
 					var file = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, "app.json");
 					
@@ -297,24 +287,9 @@ var APP = {
 						cancel: 0
 					});
 					
-					dialog.addEventListener("click", function(_event) {
-						if(_event.index != _event.source.cancel) {
-							APP.log("info", "Update accepted");
-							
-							APP.rebuild();
-						} else {
-							APP.log("info", "Update declined");
-							
-							dialog = Ti.UI.createAlertDialog({
-								title: "Update Declined",
-								message: "The updates will take effect the next time you restart the application."
-							});
-							
-							dialog.show();
-						}
-					});
-					
-					dialog.show();
+					if(typeof _params.callback !== "undefined") {
+						_params.callback();
+					}
 				}
 			});
 		}
