@@ -123,16 +123,6 @@ var APP = {
 
 		// The initial screen to show
 		APP.handleNavigation(0);
-
-		// Updates the app.json file from a remote source
-		APP.update();
-
-		// Set up push notifications
-		if(OS_IOS) {
-			if(APP.Settings.notifications.enabled) {
-				APP.registerPush();
-			}
-		}
 	},
 	/**
 	 * Determines the device characteristics
@@ -168,22 +158,7 @@ var APP = {
 		var db = Ti.Database.open("ChariTi");
 
 		db.execute("CREATE TABLE IF NOT EXISTS updates (url TEXT PRIMARY KEY, time TEXT);");
-		db.execute("CREATE TABLE IF NOT EXISTS log (time INTEGER, type TEXT, message TEXT);");
 
-		// Fill the log table with empty rows that we can 'update', providing a max row limit
-		var data = db.execute("SELECT time FROM log;");
-
-		if(data.rowCount === 0) {
-			db.execute("BEGIN TRANSACTION;");
-
-			for(var i = 0; i < 100; i++) {
-				db.execute("INSERT INTO log VALUES (" + i + ", \"\", \"\");");
-			}
-
-			db.execute("END TRANSACTION;");
-		}
-
-		data.close();
 		db.close();
 	},
 	/**
@@ -204,11 +179,11 @@ var APP = {
 		try {
 			data = JSON.parse(content.text);
 		} catch(_error) {
-			APP.log("error", "Unable to parse downloaded JSON, reverting to packaged JSON");
+			APP.log("error", "Unable to parse downloaded JSON");
 
-			contentFile = Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory + "data/app.json");
-			content = contentFile.read();
-			data = JSON.parse(content.text);
+			alert("Unable to parse configuration file");
+
+			return;
 		}
 
 		APP.ID = data.id;
@@ -264,57 +239,27 @@ var APP = {
 	/**
 	 * Updates the app.json from a remote source
 	 */
-	update: function() {
+	update: function(_params) {
 		APP.log("debug", "APP.update");
 
-		if(APP.ConfigurationURL) {
+		if(_params.url) {
 			HTTP.request({
 				timeout: 10000,
 				type: "GET",
 				format: "DATA",
-				url: APP.ConfigurationURL,
+				url: _params.url,
 				success: function(_data) {
 					APP.log("debug", "APP.update @loaded");
 
-					// Determine if this is the same version as we already have
 					var data = JSON.parse(_data);
 
-					if(data.version == APP.VERSION) {
-						// We already have it
-						APP.log("info", "Application is up-to-date");
-
-						return;
-					}
-
 					var file = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, "app.json");
-
 					file.write(_data);
+					file = null;
 
-					var dialog = Ti.UI.createAlertDialog({
-						title: "Update Available",
-						message: "New content has been downloaded. Would you like to refresh the application now?",
-						buttonNames: ["No", "Yes"],
-						cancel: 0
-					});
-
-					dialog.addEventListener("click", function(_event) {
-						if(_event.index != _event.source.cancel) {
-							APP.log("info", "Update accepted");
-
-							APP.rebuild();
-						} else {
-							APP.log("info", "Update declined");
-
-							dialog = Ti.UI.createAlertDialog({
-								title: "Update Declined",
-								message: "The updates will take effect the next time you restart the application."
-							});
-
-							dialog.show();
-						}
-					});
-
-					dialog.show();
+					if(typeof _params.callback !== "undefined") {
+						_params.callback();
+					}
 				}
 			});
 		}
@@ -339,12 +284,6 @@ var APP = {
 		APP.Detail = [];
 		APP.cancelLoading = false;
 		APP.loadingOpen = false;
-
-		APP.loadContent();
-
-		APP.build(true);
-
-		APP.handleNavigation(0);
 	},
 	/**
 	 * Global event handler to change screens
@@ -631,62 +570,6 @@ var APP = {
 		APP.addChild("settings", {}, "settings");
 	},
 	/**
-	 * Registers the app for push notifications
-	 */
-	registerPush: function() {
-		if(OS_IOS) {
-			APP.log("debug", "APP.registerPush");
-
-			UA = require("ti.urbanairship");
-
-			UA.options = {
-				APP_STORE_OR_AD_HOC_BUILD: true,
-				PRODUCTION_APP_KEY: APP.Settings.notifications.key,
-				PRODUCTION_APP_SECRET: APP.Settings.notifications.secret,
-				LOGGING_ENABLED: false
-			};
-
-			Ti.Network.registerForPushNotifications({
-				types: [
-					Ti.Network.NOTIFICATION_TYPE_BADGE,
-					Ti.Network.NOTIFICATION_TYPE_ALERT,
-					Ti.Network.NOTIFICATION_TYPE_SOUND
-				],
-				success: function(_event) {
-					APP.log("debug", "APP.registerPush @success");
-					APP.log("trace", _event.deviceToken);
-
-					UA.registerDevice(_event.deviceToken, {
-						tags: [
-							APP.ID,
-							APP.Version,
-							Ti.Platform.osname,
-							Ti.Platform.locale
-						]
-					});
-				},
-				error: function(_event) {
-					APP.log("debug", "APP.registerPush @error");
-					APP.log("trace", JSON.stringify(_event));
-				},
-				callback: function(_event) {
-					APP.log("debug", "APP.registerPush @callback");
-					APP.log("trace", JSON.stringify(_event));
-
-					UA.handleNotification(_event.data);
-
-					if(_event.data.tab) {
-						var tabIndex = parseInt(_event.data.tab) - 1;
-
-						if(APP.Nodes[tabIndex]) {
-							APP.handleNavigation(tabIndex);
-						}
-					}
-				}
-			});
-		}
-	},
-	/**
 	 * Logs all console data
 	 * @param {String} _severity A severity type (error, trace, info)
 	 * @param {String} _text The text to log
@@ -711,45 +594,6 @@ var APP = {
 			case "warn":
 				Ti.API.warn(_text);
 				break;
-		}
-
-		var db = Ti.Database.open("ChariTi");
-
-		var time = new Date().getTime();
-		var type = UTIL.escapeString(_severity);
-		var message = UTIL.escapeString(_text);
-
-		db.execute("UPDATE log SET time = " + time + ", type = " + type + ", message = " + message + " WHERE time = (SELECT min(time) FROM log);");
-		db.close();
-	},
-	/**
-	 * Sends the log files via e-mail dialog
-	 */
-	logSend: function() {
-		var db = Ti.Database.open("ChariTi");
-		var data = db.execute("SELECT * FROM log WHERE message != \"\" ORDER BY time DESC;");
-
-		var log = APP.ID + " " + APP.VERSION + " (" + APP.CVERSION + ")\n" + APP.Device.os + " " + APP.Device.version + " (" + APP.Device.name + ") " + Ti.Platform.locale + "\n\n" + "=====\n\n";
-
-		while(data.isValidRow()) {
-			log += "[" + data.fieldByName("type") + "] " + data.fieldByName("message") + "\n";
-
-			data.next();
-		}
-
-		log += "\n=====";
-
-		data.close();
-		db.close();
-
-		var email = Ti.UI.createEmailDialog({
-			barColor: "#000",
-			subject: "Application Log",
-			messageBody: log
-		});
-
-		if(email.isSupported) {
-			email.open();
 		}
 	},
 	/**
