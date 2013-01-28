@@ -1,7 +1,7 @@
-var Alloy = require("alloy");
-var HTTP = require("http");
-var UTIL = require("utilities");
-var MIGRATE = require("migrate");
+var Alloy	= require("alloy");
+var HTTP	= require("http");
+var UTIL	= require("utilities");
+var MIGRATE	= require("migrate");
 var UA;
 
 /**
@@ -95,32 +95,32 @@ var APP = {
 	 */
 	init: function() {
 		Ti.API.debug("APP.init");
-
+		
 		// Global system Events
 		Ti.Network.addEventListener("change", APP.networkObserver);
 		Ti.Gesture.addEventListener("orientationchange", APP.orientationObserver);
 		Ti.App.addEventListener("pause", APP.exitObserver);
 		Ti.App.addEventListener("close", APP.exitObserver);
 		Ti.App.addEventListener("resumed", APP.resumeObserver);
-
+		
 		// Determine device characteristics
 		APP.determineDevice();
-
+		
 		// Migrate to newer ChariTi version
 		MIGRATE.init(APP.CVERSION);
-
+		
 		// Create a database
 		APP.setupDatabase();
-
+		
 		// Reads in the JSON config file
 		APP.loadContent();
-
+		
 		// Builds out the tab group
 		APP.build();
-
+		
 		// Open the main window
 		APP.MainWindow.open();
-
+		
 		// The initial screen to show
 		APP.handleNavigation(0);
 	},
@@ -128,12 +128,12 @@ var APP = {
 	 * Determines the device characteristics
 	 */
 	determineDevice: function() {
-		APP.Device.versionMajor = parseInt(APP.Device.version.split(".")[0], 10);
-		APP.Device.versionMinor = parseInt(APP.Device.version.split(".")[1], 10);
-
+		APP.Device.versionMajor	= parseInt(APP.Device.version.split(".")[0], 10);
+		APP.Device.versionMinor	= parseInt(APP.Device.version.split(".")[1], 10);
+		
 		if(OS_IOS) {
 			APP.Device.os = "IOS";
-
+			
 			if(Ti.Platform.osname.toUpperCase() == "IPHONE") {
 				APP.Device.name = "IPHONE";
 			} else if(Ti.Platform.osname.toUpperCase() == "IPAD") {
@@ -141,12 +141,12 @@ var APP = {
 			}
 		} else if(OS_ANDROID) {
 			APP.Device.os = "ANDROID";
-
+			
 			APP.Device.name = Ti.Platform.model.toUpperCase();
-
+			
 			// Fix the display values
-			APP.Device.width = (APP.Device.width / (APP.Device.dpi / 160));
-			APP.Device.height = (APP.Device.height / (APP.Device.dpi / 160));
+			APP.Device.width	= (APP.Device.width / (APP.Device.dpi / 160));
+			APP.Device.height	= (APP.Device.height / (APP.Device.dpi / 160));
 		}
 	},
 	/**
@@ -154,11 +154,11 @@ var APP = {
 	 */
 	setupDatabase: function() {
 		Ti.API.debug("APP.setupDatabase");
-
+		
 		var db = Ti.Database.open("ChariTi");
-
+		
 		db.execute("CREATE TABLE IF NOT EXISTS updates (url TEXT PRIMARY KEY, time TEXT);");
-
+		
 		db.close();
 	},
 	/**
@@ -166,38 +166,38 @@ var APP = {
 	 */
 	loadContent: function() {
 		APP.log("debug", "APP.loadContent");
-
+		
 		var contentFile = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, "app.json");
-
+		
 		if(!contentFile.exists()) {
 			contentFile = Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory + "data/app.json");
 		}
-
+		
 		var content = contentFile.read();
 		var data;
-
+		
 		try {
 			data = JSON.parse(content.text);
 		} catch(_error) {
 			APP.log("error", "Unable to parse downloaded JSON");
-
+			
 			alert("Unable to parse configuration file");
-
+			
 			return;
 		}
-
-		APP.ID = data.id;
-		APP.VERSION = data.version;
-		APP.LEGAL = {
+		
+		APP.ID		= data.id;
+		APP.VERSION	= data.version;
+		APP.LEGAL	= {
 			COPYRIGHT: data.legal.copyright,
 			TOS: data.legal.terms,
 			PRIVACY: data.legal.privacy
 		};
-
-		APP.ConfigurationURL = data.configurationUrl && data.configurationUrl.length > 10 ? data.configurationUrl : false;
-		APP.Settings = data.settings;
-		APP.Plugins = data.plugins;
-		APP.Nodes = data.tabs;
+		
+		APP.ConfigurationURL	= data.configurationUrl && data.configurationUrl.length > 10 ? data.configurationUrl : false;
+		APP.Settings			= data.settings;
+		APP.Plugins				= data.plugins;
+		APP.Nodes				= data.tabs;
 	},
 	/**
 	 * Builds out the tab group
@@ -205,9 +205,9 @@ var APP = {
 	 */
 	build: function(_rebuild) {
 		APP.log("debug", "APP.build");
-
+		
 		var tabs = [];
-
+		
 		for(var i = 0, x = APP.Nodes.length; i < x; i++) {
 			tabs.push({
 				id: i,
@@ -216,7 +216,7 @@ var APP = {
 				controller: APP.Nodes[i].type.toLowerCase()
 			});
 		}
-
+		
 		// Create a tab group
 		APP.Tabs.init({
 			tabs: tabs,
@@ -241,7 +241,7 @@ var APP = {
 	 */
 	update: function(_params) {
 		APP.log("debug", "APP.update");
-
+		
 		if(_params.url) {
 			HTTP.request({
 				timeout: 10000,
@@ -250,13 +250,13 @@ var APP = {
 				url: _params.url,
 				success: function(_data) {
 					APP.log("debug", "APP.update @loaded");
-
+					
 					var data = JSON.parse(_data);
-
+					
 					var file = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, "app.json");
 					file.write(_data);
 					file = null;
-
+					
 					if(typeof _params.callback !== "undefined") {
 						_params.callback();
 					}
@@ -269,21 +269,21 @@ var APP = {
 	 */
 	rebuild: function() {
 		APP.log("debug", "APP.rebuild");
-
+		
 		APP.Tabs.clear();
-
-		APP.currentStack = -1;
-		APP.previousScreen = null;
-		APP.controllerStacks = [];
-		APP.nonTabStacks = {};
-		APP.hasDetail = false;
-		APP.currentDetailStack = -1;
-		APP.previousDetailScreen = null;
-		APP.detailStacks = [];
-		APP.Master = [];
-		APP.Detail = [];
-		APP.cancelLoading = false;
-		APP.loadingOpen = false;
+		
+		APP.currentStack			= -1;
+		APP.previousScreen			= null;
+		APP.controllerStacks		= [];
+		APP.nonTabStacks			= {};
+		APP.hasDetail				= false;
+		APP.currentDetailStack		= -1;
+		APP.previousDetailScreen	= null;
+		APP.detailStacks			= [];
+		APP.Master					= [];
+		APP.Detail					= [];
+		APP.cancelLoading			= false;
+		APP.loadingOpen				= false;
 	},
 	/**
 	 * Global event handler to change screens
@@ -298,41 +298,41 @@ var APP = {
 		} else {
 			// Move the tab selection indicator
 			APP.Tabs.setIndex(_id);
-
+			
 			// Closes any loading screens
 			APP.closeLoading();
-
+			
 			// Set current stack
 			APP.currentStack = _id;
-
+			
 			// Create new controller stack if it doesn't exist
 			if(typeof APP.controllerStacks[_id] === "undefined") {
 				APP.controllerStacks[_id] = [];
 			}
-
+			
 			if(APP.Device.isTablet) {
 				APP.currentDetailStack = _id;
-
+				
 				if(typeof APP.detailStacks[_id] === "undefined") {
 					APP.detailStacks[_id] = [];
 				}
 			}
-
+			
 			// Set current controller stack
 			var controllerStack = APP.controllerStacks[_id];
-
+			
 			// If we're opening for the first time, create new screen
 			// Otherwise, add the last screen in the stack (screen we navigated away from earlier on)
 			var screen;
-
+			
 			APP.hasDetail = false;
 			APP.previousDetailScreen = null;
-
+			
 			if(controllerStack.length > 0) {
 				// Retrieve the last screen
 				if(APP.Device.isTablet) {
 					screen = controllerStack[0];
-
+					
 					if(screen.type == "tablet") {
 						APP.hasDetail = true;
 					}
@@ -342,26 +342,26 @@ var APP = {
 			} else {
 				// Create a new screen
 				var type = APP.Nodes[_id].type.toLowerCase();
-
+				
 				if(APP.Device.isTablet) {
 					var file = Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory, "alloy", "controllers", type + "_tablet.js");
-
+					
 					if(file.exists()) {
 						type = type + "_tablet";
-
+						
 						APP.hasDetail = true;
 					}
 				}
-
+				
 				screen = Alloy.createController(type, APP.Nodes[_id]).getView();
-
+				
 				// Add screen to the controller stack
 				controllerStack.push(screen);
 			}
-
+			
 			// Add the screen to the window
 			APP.addScreen(screen);
-
+			
 			// TODO: Fix this for tablets
 			// Tell the screen it was added to the window
 			/*
@@ -370,7 +370,7 @@ var APP = {
 			}
 			*/
 		}
-
+		
 		APP.nonTabStacks = {};
 	},
 	/**
@@ -380,13 +380,13 @@ var APP = {
 	 */
 	addChild: function(_controller, _params, _stack) {
 		var stack;
-
+		
 		// Determine if stack is associated with a tab
 		if(typeof _stack !== "undefined") {
 			if(typeof APP.nonTabStacks[_stack] === "undefined") {
 				APP.nonTabStacks[_stack] = [];
 			}
-
+			
 			stack = APP.nonTabStacks[_stack];
 		} else {
 			if(APP.Device.isHandheld || !APP.hasDetail) {
@@ -395,13 +395,13 @@ var APP = {
 				stack = APP.detailStacks[APP.currentDetailStack];
 			}
 		}
-
+		 
 		// Create the new screen controller
 		var screen = Alloy.createController(_controller, _params).getView();
-
+		
 		// Add screen to the controller stack
 		stack.push(screen);
-
+		
 		// Add the screen to the window
 		if(APP.Device.isHandheld || !APP.hasDetail || typeof _stack !== "undefined") {
 			APP.addScreen(screen);
@@ -413,28 +413,28 @@ var APP = {
 	 * Removes a child screen
 	 */
 	removeChild: function(_stack) {
-		var stack = (typeof _stack !== "undefined") ? APP.nonTabStacks[_stack] : APP.controllerStacks[APP.currentStack];
-
+		var stack	= (typeof _stack !== "undefined") ? APP.nonTabStacks[_stack] : APP.controllerStacks[APP.currentStack];
+		
 		if(APP.Device.isTablet && APP.hasDetail) {
-			stack = (typeof _stack !== "undefined") ? APP.nonTabStacks[_stack] : APP.detailStacks[APP.currentDetailStack];
+			stack	= (typeof _stack !== "undefined") ? APP.nonTabStacks[_stack] : APP.detailStacks[APP.currentDetailStack];
 		}
-
-		var screen = stack[stack.length - 1];
+		
+		var screen	= stack[stack.length - 1];
 		var previousStack;
 		var previousScreen;
-
+		
 		stack.pop();
-
+		
 		if(stack.length === 0) {
 			previousStack = APP.controllerStacks[APP.currentStack];
-
+			
 			if(APP.Device.isHandheld || !APP.hasDetail) {
-				previousScreen = previousStack[previousStack.length - 1];
-
+				previousScreen	= previousStack[previousStack.length - 1];
+				
 				APP.addScreen(previousScreen);
 			} else {
-				previousScreen = previousStack[0];
-
+				previousScreen	= previousStack[0];
+				
 				if(typeof _stack !== "undefined") {
 					APP.addScreen(previousScreen);
 				} else {
@@ -443,7 +443,7 @@ var APP = {
 			}
 		} else {
 			previousScreen = stack[stack.length - 1];
-
+			
 			if(APP.Device.isHandheld || !APP.hasDetail) {
 				APP.addScreen(previousScreen);
 			} else {
@@ -460,11 +460,11 @@ var APP = {
 	 */
 	removeAllChildren: function(_stack) {
 		var stack = (typeof _stack !== "undefined") ? APP.nonTabStacks[_stack] : APP.controllerStacks[APP.currentStack];
-
+		
 		for(var i = stack.length - 1; i > 0; i--) {
 			stack.pop();
 		}
-
+		
 		APP.addScreen(stack[0]);
 	},
 	/**
@@ -473,11 +473,11 @@ var APP = {
 	addScreen: function(_screen) {
 		if(_screen) {
 			APP.ContentWrapper.add(_screen);
-
+			
 			if(APP.previousScreen) {
 				APP.removeScreen(APP.previousScreen);
 			}
-
+			
 			APP.previousScreen = _screen;
 		}
 	},
@@ -487,7 +487,7 @@ var APP = {
 	removeScreen: function(_screen) {
 		if(_screen) {
 			APP.ContentWrapper.remove(_screen);
-
+			
 			APP.previousScreen = null;
 		}
 	},
@@ -505,17 +505,17 @@ var APP = {
 	addDetailScreen: function(_screen) {
 		if(_screen) {
 			APP.Detail[APP.currentStack].add(_screen);
-
+			
 			if(APP.previousDetailScreen && APP.previousDetailScreen != _screen) {
 				var pop = true;
-
+				
 				if(APP.detailStacks[APP.currentDetailStack][0].type == "PARENT" && _screen.type != "PARENT") {
 					pop = false;
 				}
-
+				
 				APP.removeDetailScreen(APP.previousDetailScreen, pop);
 			}
-
+			
 			APP.previousDetailScreen = _screen;
 		}
 	},
@@ -525,12 +525,12 @@ var APP = {
 	removeDetailScreen: function(_screen, _pop) {
 		if(_screen) {
 			APP.Detail[APP.currentStack].remove(_screen);
-
+			
 			APP.previousDetailScreen = null;
-
+			
 			if(_pop) {
 				var stack = APP.detailStacks[APP.currentDetailStack];
-
+				
 				stack.splice(0, stack.length - 1);
 			}
 		}
@@ -540,11 +540,11 @@ var APP = {
 	 */
 	openLoading: function() {
 		APP.cancelLoading = false;
-
+		
 		setTimeout(function() {
 			if(!APP.cancelLoading) {
 				APP.loadingOpen = true;
-
+				
 				APP.GlobalWrapper.add(APP.Loading);
 			}
 		}, 100);
@@ -554,10 +554,10 @@ var APP = {
 	 */
 	closeLoading: function() {
 		APP.cancelLoading = true;
-
+		
 		if(APP.loadingOpen) {
 			APP.GlobalWrapper.remove(APP.Loading);
-
+			
 			APP.loadingOpen = false;
 		}
 	},
@@ -566,7 +566,7 @@ var APP = {
 	 */
 	openSettings: function() {
 		APP.log("debug", "APP.openSettings");
-
+		
 		APP.addChild("settings", {}, "settings");
 	},
 	/**
@@ -602,13 +602,13 @@ var APP = {
 	 */
 	orientationObserver: function(_event) {
 		APP.log("debug", "APP.orientationObserver");
-
+		
 		if(APP.Device.statusBarOrientation && APP.Device.statusBarOrientation == _event.orientation) {
 			return;
 		}
-
+		
 		APP.Device.statusBarOrientation = _event.orientation;
-
+		
 		APP.Device.orientation = (_event.orientation == Ti.UI.LANDSCAPE_LEFT || _event.orientation == Ti.UI.LANDSCAPE_RIGHT) ? "LANDSCAPE" : "PORTRAIT";
 
 		Ti.App.fireEvent("APP:orientationChange");
@@ -619,10 +619,10 @@ var APP = {
 	 */
 	networkObserver: function(_event) {
 		APP.log("debug", "APP.networkObserver");
-
-		APP.Network.type = _event.networkTypeName;
-		APP.Network.online = _event.online;
-
+		
+		APP.Network.type	= _event.networkTypeName;
+		APP.Network.online	= _event.online;
+		
 		Ti.App.fireEvent("APP:networkChange");
 	},
 	/**

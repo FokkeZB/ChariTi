@@ -8,10 +8,6 @@
 			<Label id="ConfigurationHistoryLabel" text="History" />
 			
 			<TableView id="ConfigurationHistory" />
-			
-			<View id="ConfigurationSubmit">
-				<Label id="ConfigurationSubmitLabel" text="Preview" />
-			</View>
 		</View>
 		
 		<View id="GlobalWrapper">

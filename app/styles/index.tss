@@ -54,7 +54,7 @@
 	autocorrect: false,
 	autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_NONE,
 	clearButtonMode: Ti.UI.INPUT_BUTTONMODE_ONFOCUS,
-	returnKeyType: Ti.UI.RETURNKEY_DONE
+	returnKeyType: Ti.UI.RETURNKEY_GO
 },
 "#ConfigurationHistoryLabel": {
 	font: {
@@ -74,26 +74,5 @@
 	backgroundColor: "#222",
 	rowHeight: "48dp",
 	separatorColor: "#333",
-	height: "192dp"
-}
-"#ConfigurationSubmit": {
-	top: "20dp",
-	left: "20dp",
-	right: "20dp",
-	height: "35dp",
-	backgroundColor: "#569BBE",
-	borderRadius: "5dp"
-},
-"#ConfigurationSubmitLabel": {
-	font: {
-		fontSize: "15dp",
-		fontWeight: "bold"
-	},
-	color: "#FFF",
-	textAlign: "center",
-	touchEnabled: false,
-	top: "0dp",
-	left: "10dp",
-	right: "10dp",
-	height: "35dp"
+	height: "288dp"
 }
