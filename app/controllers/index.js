@@ -14,18 +14,18 @@ APP.Tabs			= $.Tabs;
 
 APP.Configuration	= $.Configuration;
 
-function configureInit() {
+APP.configureInit	= function() {
 	APP.GlobalWrapper.visible	= false;
+	APP.Configuration.visible	= true;
 	
 	var db = Ti.Database.open("ChariTi");
 	db.execute("CREATE TABLE IF NOT EXISTS urls (id INTEGER PRIMARY KEY, url TEXT);");
 	
-	$.MainWindow.open();
-	
-	retrieve();
-}
+	APP.MainWindow.open();
+	APP.configRetrieve();
+};
 
-function retrieve() {
+APP.configRetrieve	= function() {
 	var db		= Ti.Database.open("ChariTi");
 	var data	= db.execute("SELECT url FROM urls ORDER BY id DESC LIMIT 10;");
 	var temp	= [];
@@ -49,25 +49,22 @@ function retrieve() {
 				fontSize: "16dp",
 				fontWeight: "bold"
 			},
-			color: "#CCC"
+			color: "#CCC",
+			hasChild: true
 		});
 		
 		rows.push(row);
 	}
 	
 	$.ConfigurationHistory.setData(rows);
-}
+};
 
-$.ConfigurationHistory.addEventListener("click", function(_event) {
-	if(_event.row.title) {
-		$.ConfigurationURLField.value = _event.row.title;
-	}
-});
-
-$.ConfigurationSubmit.addEventListener("click", function(_event) {
+$.ConfigurationURLField.addEventListener("return", function(_event) {
 	var URL = $.ConfigurationURLField.value;
 	
 	if(URL.length > 0) {
+		Ti.App.Properties.setString("URL", URL);
+		
 		// Update the configuration file
 		APP.update({
 			url: URL,
@@ -76,18 +73,46 @@ $.ConfigurationSubmit.addEventListener("click", function(_event) {
 				APP.GlobalWrapper.visible	= true;
 				APP.Configuration.visible	= false;
 				
+				// Rebuild
+				APP.rebuild();
+				
 				// Start the APP
 				APP.init();
 			}
 		});
 		
+		// Save the history
 		var db = Ti.Database.open("ChariTi");
 		db.execute("INSERT INTO urls VALUES(NULL, " + UTIL.escapeString(URL) + ");");
 		db.close();
 	}
 });
 
-configureInit();
+$.ConfigurationHistory.addEventListener("click", function(_event) {
+	var URL = _event.row.title;
+	
+	if(URL.length > 0) {
+		Ti.App.Properties.setString("URL", URL);
+		
+		// Update the configuration file
+		APP.update({
+			url: URL,
+			callback: function() {
+				// Remove configuration screen
+				APP.GlobalWrapper.visible	= true;
+				APP.Configuration.visible	= false;
+				
+				// Rebuild
+				APP.rebuild();
+				
+				// Start the APP
+				APP.init();
+			}
+		});
+	}
+});
+
+APP.configureInit();
 
 ///////////////////////////
 // Configuration process //

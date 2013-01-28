@@ -21,7 +21,6 @@ $.init = function() {
 	}
 	
 	$.copyright.text = APP.LEGAL.COPYRIGHT;
-	$.version.text = "Version " + APP.VERSION + ", ChariTi " + APP.CVERSION;
 };
 
 // Event listeners
@@ -49,16 +48,31 @@ $.privacy.addEventListener("click", function(_event) {
 	}, "settings");
 });
 
-$.acknowledgements.addEventListener("click", function(_event) {
-	APP.log("debug", "settings @credits");
+$.refresh.addEventListener("click", function(_event) {
+	APP.log("debug", "settings @refresh");
 	
-	APP.addChild("settings_credits", {}, "settings");
+	var URL = Ti.App.Properties.getString("URL");
+	
+	// Update the configuration file
+	APP.update({
+		url: URL,
+		callback: function() {
+			// Close the Settings screen
+			APP.removeChild("settings");
+			
+			// Rebuild
+			APP.rebuild();
+			
+			// Start the APP
+			APP.init();
+		}
+	});
 });
 
-$.logs.addEventListener("click", function(_event) {
-	APP.log("debug", "settings @logs");
+$.restart.addEventListener("click", function(_event) {
+	APP.log("debug", "settings @restart");
 	
-	APP.logSend();
+	APP.configureInit();
 });
 
 // Kick off the init
