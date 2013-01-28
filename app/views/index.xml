@@ -1,5 +1,19 @@
 <Alloy>
 	<Window id="MainWindow">
+		<View id="Configuration">
+			<Label id="ConfigurationURLLabel" text="Configuration File URL" />
+			
+			<TextField id="ConfigurationURLField" />
+			
+			<Label id="ConfigurationHistoryLabel" text="History" />
+			
+			<TableView id="ConfigurationHistory" />
+			
+			<View id="ConfigurationSubmit">
+				<Label id="ConfigurationSubmitLabel" text="Preview" />
+			</View>
+		</View>
+		
 		<View id="GlobalWrapper">
 			<View id="ContentWrapper" />
 			
