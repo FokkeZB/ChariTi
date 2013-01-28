@@ -284,12 +284,6 @@ var APP = {
 		APP.Detail					= [];
 		APP.cancelLoading			= false;
 		APP.loadingOpen				= false;
-		
-		APP.loadContent();
-		
-		APP.build(true);
-		
-		APP.handleNavigation(0);
 	},
 	/**
 	 * Global event handler to change screens

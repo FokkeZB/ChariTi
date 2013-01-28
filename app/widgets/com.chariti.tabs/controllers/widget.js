@@ -85,6 +85,9 @@ $.init = function(_params) {
 		tab.add(label);
 		
 		if($.excess && i > ($.excessLength - 2)) {
+			console.log(_params.tabs[i].title);
+			console.log(i + " of " + $.excess);
+			
 			tab.backgroundImage = "/com.chariti.tabs/overlay.png";
 			tab.width	= ($.width + 1) + "dp";
 			label.left	= "6dp";
@@ -171,7 +174,7 @@ $.addMoreTab = function(_params) {
 $.clear = function() {
 	var children		= $.Tabs.children;
 	var childrenMore	= $.TabsMore.children;
-	
+	console.log(JSON.stringify(childrenMore));
 	for(var i = 0; i < children.length; i++) {
 		$.Tabs.remove(children[i]);
 	}
