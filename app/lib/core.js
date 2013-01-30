@@ -1,8 +1,6 @@
 var Alloy = require("alloy");
-var HTTP = require("http");
 var UTIL = require("utilities");
-var MIGRATE = require("migrate");
-var UA;
+var HTTP = require("http");
 
 /**
  * Main app singleton
@@ -20,6 +18,7 @@ var APP = {
 		TOS: null,
 		PRIVACY: null
 	},
+	ConfigurationURL: null,
 	Nodes: [],
 	Plugins: null,
 	Settings: null,
@@ -38,7 +37,7 @@ var APP = {
 		width: Ti.Platform.displayCaps.platformWidth > Ti.Platform.displayCaps.platformHeight ? Ti.Platform.displayCaps.platformHeight : Ti.Platform.displayCaps.platformWidth,
 		height: Ti.Platform.displayCaps.platformWidth > Ti.Platform.displayCaps.platformHeight ? Ti.Platform.displayCaps.platformWidth : Ti.Platform.displayCaps.platformHeight,
 		dpi: Ti.Platform.displayCaps.dpi,
-		orientation: Ti.UI.orientation == Ti.UI.LANDSCAPE_LEFT || Ti.UI.orientation == Ti.UI.LANDSCAPE_RIGHT ? "LANDSCAPE" : "PORTRAIT",
+		orientation: Ti.Gesture.orientation == Ti.UI.LANDSCAPE_LEFT || Ti.Gesture.orientation == Ti.UI.LANDSCAPE_RIGHT ? "LANDSCAPE" : "PORTRAIT",
 		statusBarOrientation: null
 	},
 	/**
@@ -107,7 +106,7 @@ var APP = {
 		APP.determineDevice();
 
 		// Migrate to newer ChariTi version
-		MIGRATE.init(APP.CVERSION);
+		require("migrate").init();
 
 		// Create a database
 		APP.setupDatabase();
@@ -232,34 +231,6 @@ var APP = {
 			APP.Tabs.Wrapper.addEventListener("click", function(_event) {
 				if(typeof _event.source.id == "number") {
 					APP.handleNavigation(_event.source.id);
-				}
-			});
-		}
-	},
-	/**
-	 * Updates the app.json from a remote source
-	 */
-	update: function(_params) {
-		APP.log("debug", "APP.update");
-
-		if(_params.url) {
-			HTTP.request({
-				timeout: 10000,
-				type: "GET",
-				format: "DATA",
-				url: _params.url,
-				success: function(_data) {
-					APP.log("debug", "APP.update @loaded");
-
-					var data = JSON.parse(_data);
-
-					var file = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, "app.json");
-					file.write(_data);
-					file = null;
-
-					if(typeof _params.callback !== "undefined") {
-						_params.callback();
-					}
 				}
 			});
 		}
@@ -536,6 +507,14 @@ var APP = {
 		}
 	},
 	/**
+	 * Opens the settings window
+	 */
+	openSettings: function() {
+		APP.log("debug", "APP.openSettings");
+
+		APP.addChild("settings", {}, "settings");
+	},
+	/**
 	 * Shows the loading screen
 	 */
 	openLoading: function() {
@@ -560,14 +539,6 @@ var APP = {
 
 			APP.loadingOpen = false;
 		}
-	},
-	/**
-	 * Opens the settings window
-	 */
-	openSettings: function() {
-		APP.log("debug", "APP.openSettings");
-
-		APP.addChild("settings", {}, "settings");
 	},
 	/**
 	 * Logs all console data
