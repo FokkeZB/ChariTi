@@ -66,7 +66,7 @@ $.ConfigurationURLField.addEventListener("return", function(_event) {
 		Ti.App.Properties.setString("URL", URL);
 
 		// Update the configuration file
-		APP.update({
+		require("update").init({
 			url: URL,
 			callback: function() {
 				// Remove configuration screen
@@ -95,7 +95,7 @@ $.ConfigurationHistory.addEventListener("click", function(_event) {
 		Ti.App.Properties.setString("URL", URL);
 
 		// Update the configuration file
-		APP.update({
+		require("update").init({
 			url: URL,
 			callback: function() {
 				// Remove configuration screen

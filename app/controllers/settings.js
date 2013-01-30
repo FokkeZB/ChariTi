@@ -54,7 +54,7 @@ $.refresh.addEventListener("click", function(_event) {
 	var URL = Ti.App.Properties.getString("URL");
 
 	// Update the configuration file
-	APP.update({
+	require("update").init({
 		url: URL,
 		callback: function() {
 			// Close the Settings screen
