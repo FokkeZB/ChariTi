@@ -50,19 +50,19 @@ $.privacy.addEventListener("click", function(_event) {
 
 $.refresh.addEventListener("click", function(_event) {
 	APP.log("debug", "settings @refresh");
-	
+
 	var URL = Ti.App.Properties.getString("URL");
-	
+
 	// Update the configuration file
 	APP.update({
 		url: URL,
 		callback: function() {
 			// Close the Settings screen
 			APP.removeChild("settings");
-			
+
 			// Rebuild
 			APP.rebuild();
-			
+
 			// Start the APP
 			APP.init();
 		}
@@ -71,7 +71,7 @@ $.refresh.addEventListener("click", function(_event) {
 
 $.restart.addEventListener("click", function(_event) {
 	APP.log("debug", "settings @restart");
-	
+
 	APP.configureInit();
 });
 
