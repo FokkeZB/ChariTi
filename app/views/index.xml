@@ -1,11 +1,13 @@
 <Alloy>
 	<Window id="MainWindow">
 		<View id="Configuration">
-			<Label id="ConfigurationURLLabel" text="Configuration File URL" />
+			<ImageView id="ConfigurationLogo" image="/images/peek.png" />
+			
+			<Label id="ConfigurationURLLabel" text="CONFIGURATION FILE URL" />
 			
 			<TextField id="ConfigurationURLField" />
 			
-			<Label id="ConfigurationHistoryLabel" text="History" />
+			<Label id="ConfigurationHistoryLabel" text="HISTORY" />
 			
 			<TableView id="ConfigurationHistory" />
 		</View>

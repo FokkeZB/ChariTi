@@ -49,7 +49,7 @@ APP.configRetrieve	= function() {
 				fontSize: "16dp",
 				fontWeight: "bold"
 			},
-			color: "#CCC",
+			color: "#666",
 			hasChild: true
 		});
 		
